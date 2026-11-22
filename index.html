@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Unova Archive | Damage Calculator</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,Arial,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:#10101d;color:#eeeafc}
+header{padding:28px 5%;background:#1a1631;border-bottom:2px solid #7d55d7}
+h1{margin:0;color:#d6baff;font-size:1.9rem}
+header p{color:#b9afce}
+main{max-width:1150px;margin:30px auto;padding:0 20px}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.panel{background:#1d1b30;border:1px solid #453a66;border-radius:14px;padding:22px}
+h2{margin-top:0;color:#d5bcff}
+label{display:block;margin:15px 0 6px;color:#c7b9e5}
+select,input{width:100%;padding:12px;background:#121123;color:white;border:1px solid #62518d;border-radius:8px;font-size:15px}
+button{background:#8758dc;color:white;border:0;border-radius:8px;padding:13px 24px;font-size:16px;cursor:pointer;margin-top:22px}
+button:hover{background:#a176ee}
+button:disabled{opacity:.5;cursor:wait}
+.results{margin-top:20px;background:#25203f;border:1px solid #69549b;border-radius:14px;padding:24px}
+.damage{font-size:2rem;font-weight:750;color:#d7b5ff}
+.muted{color:#b6accd}
+.error{color:#ff9baf}
+footer{padding:25px;text-align:center;color:#968baa}
+@media(max-width:720px){.layout{grid-template-columns:1fr}}
+.stat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stat-grid label{margin:5px 0;font-size:13px}
+.stat-grid input{padding:9px}
+h3{color:#cbb2ff;margin:20px 0 10px;font-size:1rem}
+@media(max-width:450px){.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.battle-panel{margin-top:20px}
+.condition-grid,.boost-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.condition-flags{display:grid;grid-template-columns:1fr 1fr;align-content:center;gap:8px}
+.condition-flags label{margin:4px 0}
+.condition-flags input{width:auto;accent-color:#9b71ef}
+.boost-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.boost-grid label{font-size:13px;margin:0}
+.boost-grid select{padding:8px}
+@media(max-width:720px){.condition-grid,.boost-layout{grid-template-columns:1fr}}
+.custom-toggle{display:flex;align-items:center;gap:9px;margin-top:18px}
+.custom-toggle input{width:auto;accent-color:#a176ee}
+#attackerCustomPanel[hidden]{display:none}
+#attackerCustomPanel{margin-top:12px;padding:15px;background:#17152a;border-radius:10px}
+.results h2{margin-bottom:10px}
+.result-subtitle{color:#b9afd0;margin:6px 0 14px}
+.damage-percent{font-size:1.25rem;color:#bda3f4;margin-top:6px}
+.result-description{line-height:1.6;color:#d1c8e6}
+#moveDetails{margin-top:10px;font-size:14px}
+input[type="search"]{background:#171329}
+.pokemon-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:14px 0}
+.stat-pill{background:#292340;border:1px solid #514276;border-radius:8px;padding:9px;text-align:center}
+.stat-pill small{display:block;color:#a99acb;font-size:11px;margin-bottom:3px}
+.stat-pill strong{font-size:16px;color:#eee2ff}
+.type-badge{display:inline-block;border-radius:20px;padding:4px 10px;color:white;font-size:12px;font-weight:700;margin:3px 5px 3px 0}
+.damage-bar{height:16px;background:#39314e;border-radius:12px;overflow:hidden;margin:16px 0 7px}
+.damage-bar-fill{height:100%;background:linear-gradient(90deg,#8054e9,#d79aff);border-radius:12px;transition:width .25s}
+.damage-bar-label{color:#bfb1db;font-size:13px}
+.panel{box-shadow:0 6px 24px #00000020}
+@media(max-width:450px){.pokemon-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.hazard-controls{margin:20px 0;padding:15px;background:#17152a;border-radius:10px}
+.hazard-controls input[type="checkbox"]{width:auto;accent-color:#a176ee}
+.hazard-controls label{margin:9px 0}
+.hazard-summary{margin-top:14px;padding:12px;background:#302644;border-radius:9px;color:#d9c7ff}
+/* V2 compact desktop layout */
+@media (min-width: 900px) {
+  main {
+    max-width: 1600px;
+    margin: 14px auto;
+    padding: 0 18px;
+  }
+
+  header {
+    padding: 12px 24px;
+  }
+
+  header h1 {
+    font-size: 1.35rem;
+  }
+
+  header p {
+    margin: 4px 0 0;
+    font-size: .85rem;
+  }
+
+  .panel {
+    padding: 14px;
+  }
+
+  .layout {
+    gap: 12px;
+  }
+
+  .calculator-tabs {
+    margin-bottom: 12px;
+  }
+
+  .calculator-tab {
+    padding: 11px;
+  }
+
+  h2 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+  }
+
+  h3 {
+    margin: 12px 0 6px;
+  }
+
+  label {
+    margin: 8px 0 4px;
+    font-size: .85rem;
+  }
+
+  select, input {
+    padding: 7px 9px;
+    font-size: 14px;
+  }
+
+  button {
+    padding: 9px 16px;
+    margin-top: 10px;
+  }
+
+  .pokemon-stats {
+    margin: 8px 0;
+    gap: 5px;
+  }
+
+  .stat-pill {
+    padding: 6px;
+  }
+
+  .stat-pill strong {
+    font-size: 14px;
+  }
+
+  .battle-panel {
+    margin-top: 12px;
+  }
+
+  .results {
+    padding: 14px;
+    margin-top: 12px;
+  }
+
+  .hazard-controls {
+    margin: 10px 0;
+    padding: 10px;
+  }
+
+  .condition-grid,
+  .boost-layout {
+    gap: 12px;
+  }
+}
+
+
+
+/* V2 collapsible advanced settings */
+.v2-details {
+  margin-top:12px;
+}
+.v2-details summary {
+  cursor:pointer;
+  padding:12px;
+  background:#302747;
+  border:1px solid #65518d;
+  border-radius:9px;
+  color:#dfcaff;
+  font-weight:700;
+  list-style-position:inside;
+}
+.v2-details[open] summary {
+  margin-bottom:12px;
+}
+.v2-details summary:hover {
+  background:#403258;
+}
+
+
+/* V2 team battle workspace */
+.v2-team-workspace {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:12px;
+  margin-bottom:12px;
+}
+
+#saveImportPanel {
+  padding:14px;
+}
+
+#saveImportPanel h2 {
+  margin-bottom:6px;
+}
+
+#saveImportPanel > p.muted {
+  font-size:12px;
+  margin:5px 0;
+}
+
+#saveImportPanel .results {
+  margin-top:10px;
+}
+
+@media(min-width:1000px) {
+  .v2-team-workspace {
+    grid-template-columns:minmax(0,1fr);
+  }
+}
+
+
+/* V2 side-by-side team selection */
+@media(min-width:900px) {
+  .v2-team-workspace {
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    align-items:start;
+  }
+}
+
+.v2-trainer-panel {
+  padding:14px;
+}
+
+.v2-trainer-panel h2 {
+  margin-bottom:10px;
+}
+
+.v2-trainer-panel label {
+  margin-top:8px;
+}
+
+
+/* V2 hide legacy manual calculator */
+main > .layout {
+  display:none !important;
+}
+
+
+/* V2 full-width damage results */
+.v2-results-panel {
+  grid-column:1 / -1;
+  background:#1d1b30;
+  border:1px solid #453a66;
+  border-radius:14px;
+  padding:14px;
+}
+
+.v2-results-panel h2 {
+  margin:0 0 8px;
+}
+
+.v2-results-panel .results {
+  margin:0;
+  min-height:100px;
+}
+
+
+/* V2 compact imported battle controls */
+.v2-import-advanced {
+  margin-top:10px;
+  border:1px solid #51436b;
+  border-radius:9px;
+  background:#17152a;
+}
+
+.v2-import-advanced summary {
+  padding:10px 12px;
+  cursor:pointer;
+  color:#d9c3ff;
+  font-weight:650;
+}
+
+.v2-import-advanced[open] {
+  padding-bottom:12px;
+}
+
+.v2-import-advanced #saveSpecialContext {
+  padding:0 12px;
+}
+
+#saveImportPanel #saveCalculate {
+  width:100%;
+  margin-top:10px;
+}
+
+#saveImportPanel label {
+  margin-top:7px;
+}
+
+#saveImportPanel select,
+#saveImportPanel input {
+  padding:8px 10px;
+}
+
+
+/* V2 hide legacy calculation output */
+#calculate,
+#results {
+  display:none !important;
+}
+
+/* Reduce unnecessary space */
+.v2-results-panel .results {
+  min-height:60px;
+  padding:12px;
+}
+
+.v2-results-panel {
+  padding:12px;
+}
+
+#saveImportPanel,
+.v2-trainer-panel {
+  padding:12px;
+}
+
+
+/* V2 eight-move results */
+.v2-move-results {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+
+.v2-move-column h3 {
+  margin:0 0 8px;
+}
+
+.v2-move-card {
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:9px;
+  margin-bottom:6px;
+  background:#302747;
+  border-radius:8px;
+  font-size:13px;
+}
+
+.v2-move-card span {
+  text-align:right;
+  color:#d9c3ff;
+}
+
+@media(max-width:750px) {
+  .v2-move-results {
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* V2 hide redundant imported battle controls */
+#saveBattleControls label[for="savePlayerMove"],
+#saveBattleControls label[for="saveDirection"],
+#saveBattleControls label[for="saveTrainerMove"],
+#savePlayerMove,
+#saveDirection,
+#saveTrainerMove,
+#saveCalculate {
+  display:none !important;
+}
+
+/* Keep the main team selector compact */
+#saveBattleControls {
+  margin-top:8px;
+}
+
+#saveImportPanel {
+  align-self:start;
+}
+
+
+/* V2 battle settings beside team selection */
+.v2-settings-slot {
+  grid-column:2;
+  grid-row:2;
+  align-self:start;
+}
+
+.v2-team-workspace {
+  align-items:start;
+}
+
+.v2-results-panel {
+  grid-column:1 / -1;
+}
+
+.v2-settings-slot .battle-panel {
+  margin:0;
+}
+
+@media(max-width:899px) {
+  .v2-settings-slot {
+    grid-column:1;
+    grid-row:auto;
+  }
+}
+
+
+/* V2 floating battle settings */
+
+/* Keep the settings trigger in the team workspace */
+.v2-settings-slot {
+  grid-column:2;
+  grid-row:2;
+  position:relative;
+  align-self:start;
+}
+
+/* Opening settings must not expand the page */
+.v2-settings-slot .battle-panel[open] {
+  position:relative;
+}
+
+/* Keep the summary visible */
+.v2-settings-slot .battle-panel > summary {
+  position:relative;
+  z-index:2;
+}
+
+/* Move expanded content into a floating overlay */
+.v2-settings-content {
+  position:absolute;
+  top:100%;
+  right:0;
+  width:min(580px,90vw);
+  max-height:65vh;
+  overflow-y:auto;
+  background:#211b35;
+  border:1px solid #8060bb;
+  border-radius:12px;
+  padding:14px;
+  box-shadow:0 15px 45px #0009;
+  z-index:50;
+}
+
+/* Keep the floating panel within the viewport */
+.v2-settings-slot {
+  z-index:10;
+}
+
+.v2-settings-slot:not(:has(details[open])) {
+  z-index:auto;
+}
+
+@media(max-width:899px) {
+  .v2-settings-slot {
+    grid-column:1;
+    grid-row:auto;
+  }
+
+  .v2-settings-content {
+    width:min(580px,94vw);
+    right:auto;
+    left:0;
+  }
+}
+
+
+/* V2 repaired floating settings */
+.v2-settings-slot .battle-panel[open] {
+  position:relative;
+}
+
+.v2-settings-slot .v2-settings-content {
+  position:absolute;
+  top:calc(100% + 4px);
+  right:0;
+  left:auto;
+  width:min(850px,94vw);
+  max-height:min(520px,70vh);
+  overflow-y:auto;
+  padding:12px;
+  background:#211b35;
+  border:1px solid #8060bb;
+  border-radius:12px;
+  box-shadow:0 15px 45px #0009;
+  z-index:100;
+}
+
+.v2-settings-content .boost-grid {
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:6px;
+}
+
+.v2-settings-content .boost-grid select {
+  padding:6px;
+}
+
+.v2-settings-content .condition-grid {
+  gap:12px;
+}
+
+.v2-settings-content .hazard-controls {
+  padding:10px;
+  margin:10px 0;
+}
+
+.v2-settings-content h3 {
+  margin:8px 0;
+}
+
+@media(max-width:750px) {
+  .v2-settings-slot .v2-settings-content {
+    width:min(600px,94vw);
+    right:auto;
+    left:0;
+  }
+
+  .v2-settings-content .boost-grid {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
+
+
+/* V2 upward-opening settings popup */
+@media(min-width:900px) {
+  .v2-settings-slot .v2-settings-content {
+    top:auto;
+    bottom:calc(100% + 8px);
+    right:0;
+    left:auto;
+    width:min(850px,94vw);
+    max-height:min(520px,65vh);
+  }
+}
+
+
+/* V2 centered battle settings popup */
+
+/* Keep the trigger in its normal position */
+.v2-settings-slot {
+  position:relative;
+}
+
+/* Center the settings independently of the page layout */
+.v2-settings-slot .v2-settings-content {
+  position:fixed !important;
+  top:50% !important;
+  left:50% !important;
+  right:auto !important;
+  bottom:auto !important;
+  transform:translate(-50%,-50%);
+  width:min(900px,94vw) !important;
+  max-height:85vh !important;
+  overflow-y:auto;
+  z-index:9999;
+  background:#211b35;
+  border:1px solid #9874e0;
+  border-radius:14px;
+  box-shadow:0 20px 70px #000c;
+}
+
+/* Make stat stages easier to access */
+.v2-settings-content .boost-grid {
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:6px;
+}
+
+.v2-settings-content .boost-grid select {
+  padding:6px;
+}
+
+@media(max-width:700px) {
+  .v2-settings-slot .v2-settings-content {
+    width:96vw !important;
+    max-height:90vh !important;
+  }
+
+  .v2-settings-content .boost-grid {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
+
+
+/* V2 normal and critical damage */
+.v2-damage-pair {
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  text-align:right;
+}
+
+.v2-damage-pair span {
+  font-size:12px;
+}
+
+.v2-critical-damage {
+  color:#ffb3ce !important;
+  font-weight:600;
+}
+
+.v2-move-card {
+  align-items:center;
+}
+
+
+/* V2 team-specific battle settings */
+.v2-legacy-flags {
+  display:none !important;
+}
+
+.v2-team-condition-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  margin:12px 0;
+}
+
+.v2-team-conditions {
+  background:#2c2442;
+  border:1px solid #57467f;
+  border-radius:10px;
+  padding:12px;
+}
+
+.v2-team-conditions h3 {
+  margin:0 0 10px;
+}
+
+.v2-team-conditions label {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:7px 0;
+  font-size:13px;
+}
+
+.v2-team-conditions input {
+  width:auto;
+  accent-color:#a176ee;
+}
+
+.v2-condition-note {
+  font-size:12px;
+}
+
+@media(max-width:650px) {
+  .v2-team-condition-grid {
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* V2 compact team settings layout */
+.v2-settings-slot .v2-settings-content {
+  width:min(960px,96vw) !important;
+  max-height:88vh !important;
+  padding:14px !important;
+}
+
+.v2-settings-content .boost-layout {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  padding-bottom:12px;
+  border-bottom:1px solid #51436b;
+  margin-bottom:12px;
+}
+
+.v2-settings-content .boost-grid {
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:5px;
+}
+
+.v2-settings-content .boost-grid select {
+  padding:5px;
+}
+
+.v2-settings-content .v2-team-condition-grid {
+  gap:10px;
+  margin:8px 0;
+}
+
+.v2-settings-content .v2-team-conditions {
+  padding:10px;
+}
+
+.v2-settings-content .v2-team-conditions label {
+  margin:4px 0;
+}
+
+.v2-settings-content h2 {
+  font-size:1rem;
+  margin:8px 0;
+}
+
+.v2-settings-content h3 {
+  font-size:.9rem;
+  margin:5px 0;
+}
+
+@media(max-width:700px) {
+  .v2-settings-content .boost-layout {
+    grid-template-columns:1fr;
+  }
+
+  .v2-settings-content .boost-grid {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
+
+
+/* V2 compact entry hazards */
+.v2-hazard-details {
+  margin-top:10px;
+}
+
+.v2-hazard-details > summary {
+  cursor:pointer;
+  padding:9px 12px;
+  background:#302747;
+  border:1px solid #65518d;
+  border-radius:8px;
+  font-weight:600;
+  color:#d9c3ff;
+}
+
+.v2-hazard-details .hazard-controls {
+  margin:8px 0 0;
+}
+
+.v2-hazard-details[open] {
+  margin-bottom:8px;
+}
+
+
+/* V2 hazard result cards */
+.v2-hazard-summary {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.v2-hazard-summary > span {
+  display:block;
+  padding:10px 12px;
+  background:#302747;
+  border:1px solid #51436b;
+  border-radius:9px;
+  color:#e6d8ff;
+  font-size:13px;
+  line-height:1.5;
+}
+
+@media(max-width:700px) {
+  .v2-hazard-summary {
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* V2 hazard HP bars */
+.v2-hazard-card {
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:5px 12px;
+  padding:9px 12px;
+  background:#302747;
+  border:1px solid #51436b;
+  border-radius:9px;
+  font-size:12px;
+}
+
+.v2-hazard-card > span {
+  text-align:right;
+  font-weight:600;
+}
+
+.v2-hp-track {
+  grid-column:1 / -1;
+  height:7px;
+  background:#151226;
+  border-radius:20px;
+  overflow:hidden;
+}
+
+.v2-hp-fill {
+  height:100%;
+  background:#a78bfa;
+  border-radius:20px;
+}
+
+.v2-hazard-card small {
+  grid-column:1 / -1;
+  color:#bfb0da;
+  font-size:11px;
+}
+
+
+/* V2 clickable Pokémon team slots */
+.v2-team-slots {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+  margin-top:8px;
+}
+
+.v2-team-slot {
+  margin:0;
+  min-width:0;
+  padding:8px 5px;
+  background:#302747;
+  border:1px solid #57467f;
+  border-radius:8px;
+  color:#e6d8ff;
+  font-size:12px;
+  cursor:pointer;
+}
+
+.v2-team-slot.active {
+  background:#6542aa;
+  border-color:#c4a5ff;
+}
+
+.v2-team-slot:hover {
+  border-color:#b99aff;
+}
+
+.v2-team-slot span {
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.v2-team-slot small {
+  display:block;
+  opacity:.75;
+  margin-top:3px;
+}
+
+
+/* V2 Gen 5 Pokémon team sprites */
+.v2-team-slot {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  min-height:82px;
+  padding:5px;
+}
+
+.v2-pokemon-sprite {
+  width:42px;
+  height:42px;
+  object-fit:contain;
+  image-rendering:pixelated;
+}
+
+.v2-team-slot span {
+  font-weight:600;
+  text-transform:capitalize;
+}
+
+.v2-team-slot small {
+  margin:0;
+}
+
+@media(max-width:700px) {
+  .v2-pokemon-sprite {
+    width:34px;
+    height:34px;
+  }
+
+  .v2-team-slot {
+    min-height:70px;
+  }
+}
+
+
+/* V2 compact sprite teams */
+
+/* Hide redundant selectors while preserving JavaScript access */
+#saveBattleControls label[for="savePokemon"],
+.v2-trainer-panel label[for="attacker"],
+#savePokemon,
+#attacker {
+  display:none !important;
+}
+
+/* Compact team layout */
+.v2-team-slots {
+  gap:5px;
+  margin-top:6px;
+}
+
+.v2-team-slot {
+  min-height:62px;
+  padding:4px;
+  gap:1px;
+}
+
+.v2-pokemon-sprite {
+  width:32px;
+  height:32px;
+}
+
+.v2-team-slot span {
+  font-size:11px;
+}
+
+.v2-team-slot small {
+  font-size:10px;
+}
+
+/* Reduce excess panel spacing */
+#saveImportPanel,
+.v2-trainer-panel {
+  padding:10px;
+}
+
+#saveImportPanel > p.muted {
+  margin:3px 0;
+}
+
+
+/* V2 Pokemon stat comparison */
+.v2-stat-comparison {
+  grid-column:1 / -1;
+  background:#1d1b30;
+  border:1px solid #51436b;
+  border-radius:10px;
+  padding:8px 12px;
+}
+
+.v2-stat-comparison > summary {
+  cursor:pointer;
+  font-weight:700;
+  color:#d9c3ff;
+}
+
+.v2-stat-comparison[open] > summary {
+  margin-bottom:10px;
+}
+
+.v2-stat-table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:12px;
+}
+
+.v2-stat-table th,
+.v2-stat-table td {
+  padding:6px;
+  border-bottom:1px solid #403453;
+  text-align:center;
+}
+
+.v2-stat-table th:first-child,
+.v2-stat-table td:first-child {
+  text-align:left;
+}
+
+.v2-stat-table small {
+  display:block;
+  color:#bfb0da;
+  font-size:10px;
+}
+
+
+/* V2 speed comparison */
+.v2-speed-controls {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 16px;
+  margin:8px 0;
+  font-size:12px;
+}
+
+.v2-speed-controls label {
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+
+.v2-speed-result {
+  background:#302747;
+  border:1px solid #65518c;
+  border-radius:8px;
+  padding:8px 12px;
+  margin:8px 0;
+  font-size:12px;
+  color:#e7d9ff;
+}
+
+.v2-speed-result strong {
+  color:#d8b9ff;
+}
+
+
+/* V2 polished speed controls */
+.v2-speed-controls {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px 22px;
+  margin:10px 0;
+}
+
+.v2-speed-controls label {
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-start;
+  width:auto;
+  max-width:none;
+  margin:0;
+  padding:0;
+  gap:7px;
+  font-size:12px;
+  line-height:1.3;
+  white-space:nowrap;
+  cursor:pointer;
+}
+
+.v2-speed-controls input[type="checkbox"] {
+  display:inline-block;
+  flex:0 0 auto;
+  width:15px;
+  height:15px;
+  margin:0;
+  padding:0;
+  accent-color:#a77bff;
+}
+
+@media(max-width:650px) {
+  .v2-speed-controls {
+    gap:8px 14px;
+  }
+
+  .v2-speed-controls label {
+    white-space:normal;
+  }
+}
+
+
+/* V2 advanced Speed controls */
+.v2-advanced-speed {
+  margin:6px 0 10px;
+  padding:7px 10px;
+  border:1px solid #51436b;
+  border-radius:8px;
+}
+
+.v2-advanced-speed summary {
+  cursor:pointer;
+  color:#d9c3ff;
+  font-size:12px;
+  font-weight:600;
+}
+
+.v2-advanced-speed-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px 12px;
+  margin-top:10px;
+}
+
+.v2-advanced-speed-grid label {
+  display:flex;
+  align-items:center;
+  gap:7px;
+  width:auto;
+  font-size:12px;
+  cursor:pointer;
+}
+
+.v2-advanced-speed-grid input[type="checkbox"] {
+  flex:0 0 auto;
+  width:15px;
+  height:15px;
+  margin:0;
+  accent-color:#a77bff;
+}
+
+@media(max-width:650px) {
+  .v2-advanced-speed-grid {
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* V2 move-order selectors */
+.v2-move-order-controls {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin:10px 0;
+}
+
+.v2-move-order-controls label {
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  min-width:0;
+  font-size:12px;
+}
+
+.v2-move-order-controls select {
+  width:100%;
+  min-width:0;
+  font-size:12px;
+}
+
+@media(max-width:650px) {
+  .v2-move-order-controls {
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* V2 static compact layout */
+
+/* Keep legacy controls available to JavaScript, but offscreen */
+.v2-legacy-manual {
+  display:none !important;
+}
+
+/* Compact desktop workspace */
+.v2-team-workspace {
+  gap:8px;
+}
+
+#saveImportPanel,
+.v2-trainer-panel {
+  padding:8px 10px;
+}
+
+.v2-team-slots {
+  gap:4px;
+  margin-top:4px;
+}
+
+.v2-team-slot {
+  min-height:60px;
+  padding:3px;
+}
+
+.v2-settings-slot {
+  margin:4px 0;
+}
+
+.v2-stat-comparison {
+  padding:6px 10px;
+  margin:4px 0;
+}
+
+.v2-stat-comparison > summary {
+  font-size:13px;
+}
+
+.v2-results-panel {
+  margin-top:4px;
+}
+
+/* Avoid excessively tall result cards */
+.v2-move-card {
+  padding:6px 8px;
+}
+
+.v2-move-column {
+  gap:5px;
+}
+
+@media(max-width:750px) {
+  .v2-team-workspace {
+    grid-template-columns:1fr;
+  }
+}
+
+</style>
+</head>
+<body>
+<header>
+<h1>⚡ Unova Archive Damage Calculator</h1>
+<p>Generation 5 battle calculations · Custom Unova Archive trainer data</p>
+</header>
+<main>
+<div class="v2-team-workspace">
+<section class="panel" id="saveImportPanel">
+<h2>Import Your Pokémon</h2>
+<p class="muted">Load a Pokémon White 2 / Unova Archive melonDS .sav file. Your save is decoded locally in this browser.</p>
+<label for="saveFile">Save File</label>
+<input id="saveFile" type="file" accept=".sav">
+<p id="saveImportStatus" class="muted">No save loaded.</p>
+<div id="saveBattleControls" hidden>
+<label for="savePokemon">Your Pokémon</label>
+<select id="savePokemon"></select>
+<div id="v2PlayerTeam" class="v2-team-slots"></div>
+<label for="savePlayerMove">Your Pokémon's Move</label>
+<select id="savePlayerMove"></select>
+<label for="saveDirection">Battle Direction</label>
+<select id="saveDirection">
+<option value="player">Your Pokémon attacks trainer</option>
+<option value="trainer">Trainer attacks your Pokémon</option>
+</select>
+<label for="saveTrainerMove">Trainer Move</label>
+<select id="saveTrainerMove"></select>
+<details class="v2-import-advanced">
+<summary>Advanced Battle Options</summary>
+<div id="saveSpecialContext">
+<h3>Special Move Context</h3>
+<label for="saveMagnitude">Magnitude Level</label>
+<select id="saveMagnitude">
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="6">6</option>
+<option value="7" selected>7</option>
+<option value="8">8</option>
+<option value="9">9</option>
+<option value="10">10</option>
+</select>
+
+<label for="saveRemainingPP">Trump Card Remaining PP</label>
+<select id="saveRemainingPP">
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5" selected>5</option>
+</select>
+
+<label for="saveStockpile">Stockpile Count</label>
+<select id="saveStockpile">
+<option value="0">None</option>
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+</select>
+
+<label for="saveAttackerHP">Attacker Current HP (blank = full)</label>
+<input id="saveAttackerHP" type="number" min="1" placeholder="Full HP">
+
+<label for="saveDefenderHP">Defender Current HP (blank = full)</label>
+<input id="saveDefenderHP" type="number" min="0" placeholder="Full HP">
+
+<label for="saveReceivedDamage">Previously Received Damage</label>
+<input id="saveReceivedDamage" type="number" min="0" value="0">
+</div>
+</details>
+<button type="button" id="saveCalculate">Calculate Imported Battle</button>
+</div>
+
+</section>
+<section class="panel v2-trainer-panel">
+<h2>Trainer Team</h2>
+<label for="trainerSearch">Search trainers</label>
+<input id="trainerSearch" type="search" placeholder="Search trainer name or ID">
+<label for="trainer">Trainer</label>
+<select id="trainer"></select>
+<label for="attacker">Trainer Pokémon</label>
+<select id="attacker"></select>
+<div id="v2TrainerTeam" class="v2-team-slots"></div>
+</section>
+<div class="v2-settings-slot">
+<details class="panel battle-panel v2-details"><summary>Battle Conditions and Stat Stages</summary>
+<div class="v2-settings-content">
+<div class="boost-layout">
+<div><h3>Trainer Pokémon Stat Stages</h3><div id="attackerBoosts" class="boost-grid"></div></div>
+<div><h3>Your Pokémon Stat Stages</h3><div id="defenderBoosts" class="boost-grid"></div></div>
+</div>
+
+
+<h2>Battle Conditions</h2>
+<label for="gameType">Battle Format</label>
+<select id="gameType">
+<option value="Singles">Singles</option>
+<option value="Doubles">Doubles</option>
+</select>
+<div class="condition-grid">
+<div>
+<label for="weather">Weather</label>
+<select id="weather">
+<option value="">None</option>
+<option value="Sun">Sun</option>
+<option value="Rain">Rain</option>
+<option value="Sand">Sandstorm</option>
+<option value="Hail">Hail</option>
+</select>
+</div>
+<div class="v2-legacy-flags" hidden>
+<div class="condition-flags">
+<label><input type="checkbox" id="reflect"> Reflect</label>
+<label><input type="checkbox" id="lightScreen"> Light Screen</label>
+<label><input type="checkbox" id="critical"> Critical Hit</label>
+<label><input type="checkbox" id="burn"> Attacker Burned</label>
+<label><input type="checkbox" id="helpingHand"> Helping Hand</label>
+<label><input type="checkbox" id="friendGuard"> Friend Guard</label>
+<label><input type="checkbox" id="gravity"> Gravity</label>
+</div>
+</div>
+</div>
+<div class="v2-team-condition-grid">
+<section class="v2-team-conditions">
+<h3>Your Pokémon</h3>
+<label><input type="checkbox" id="playerReflect"> Reflect</label>
+<label><input type="checkbox" id="playerLightScreen"> Light Screen</label>
+<label><input type="checkbox" id="playerHelpingHand"> Helping Hand</label>
+<label><input type="checkbox" id="playerFriendGuard"> Friend Guard</label>
+<label><input type="checkbox" id="playerBurned"> Burned</label></section>
+<section class="v2-team-conditions">
+<h3>Trainer Pokémon</h3>
+<label><input type="checkbox" id="trainerReflect"> Reflect</label>
+<label><input type="checkbox" id="trainerLightScreen"> Light Screen</label>
+<label><input type="checkbox" id="trainerHelpingHand"> Helping Hand</label>
+<label><input type="checkbox" id="trainerFriendGuard"> Friend Guard</label>
+<label><input type="checkbox" id="trainerBurned"> Burned</label></section>
+</div>
+
+
+<details class="v2-hazard-details">
+<summary>Entry Hazards</summary>
+<div class="v2-team-condition-grid">
+
+<section class="v2-team-conditions">
+<h3>Your Side</h3>
+<label>
+<input type="checkbox" id="playerStealthRock">
+Stealth Rock
+</label>
+<label for="playerSpikes">Spikes Layers</label>
+<select id="playerSpikes">
+<option value="0">None</option>
+<option value="1">1 Layer</option>
+<option value="2">2 Layers</option>
+<option value="3">3 Layers</option>
+</select>
+</section>
+
+<section class="v2-team-conditions">
+<h3>Trainer Side</h3>
+<label>
+<input type="checkbox" id="trainerStealthRock">
+Stealth Rock
+</label>
+<label for="trainerSpikes">Spikes Layers</label>
+<select id="trainerSpikes">
+<option value="0">None</option>
+<option value="1">1 Layer</option>
+<option value="2">2 Layers</option>
+<option value="3">3 Layers</option>
+</select>
+</section>
+
+</div>
+<p class="muted">
+Hazards apply when switching in, not during an attack.
+These new controls are not connected yet.
+</p>
+<div hidden>
+<details class="v2-hazard-details"><summary>Entry Hazards (not yet connected)</summary><div class="hazard-controls">
+<h3>Defender Entry Hazards</h3>
+<label><input type="checkbox" id="stealthRock"> Stealth Rock</label>
+<label for="spikes">Spikes Layers</label>
+<select id="spikes">
+<option value="0">None</option>
+<option value="1">1 Layer</option>
+<option value="2">2 Layers</option>
+<option value="3">3 Layers</option>
+</select>
+<p class="muted">Hazards apply on switch-in, not during the attack.</p>
+</div></details>
+</div>
+</details>
+
+
+
+</div>
+</details>
+</div>
+
+
+<details id="v2StatComparison" class="v2-stat-comparison">
+<summary>Pokémon Stats · IVs · EVs</summary>
+<div class="v2-speed-controls">
+<label><input type="checkbox" id="v2TrickRoom"> Trick Room</label>
+<label><input type="checkbox" id="v2PlayerParalyzed"> Your Pokémon Paralyzed</label>
+<label><input type="checkbox" id="v2TrainerParalyzed"> Trainer Pokémon Paralyzed</label>
+</div>
+
+<details class="v2-advanced-speed">
+<summary>Additional Speed Conditions</summary>
+<div class="v2-advanced-speed-grid">
+<label><input type="checkbox" id="v2PlayerTailwind"> Your Pokémon: Tailwind</label>
+<label><input type="checkbox" id="v2TrainerTailwind"> Trainer Pokémon: Tailwind</label>
+<label><input type="checkbox" id="v2PlayerUnburden"> Your Pokémon: Unburden activated</label>
+<label><input type="checkbox" id="v2TrainerUnburden"> Trainer Pokémon: Unburden activated</label>
+</div>
+</details>
+
+
+<div class="v2-move-order-controls">
+<label>
+Your Pokémon's Move
+<select id="v2PlayerOrderMove"></select>
+</label>
+<label>
+Trainer Pokémon's Move
+<select id="v2TrainerOrderMove"></select>
+</label>
+</div>
+<div id="v2MoveOrderResult" class="v2-speed-result">
+Select moves to compare turn order.
+</div>
+
+<div id="v2SpeedResult" class="v2-speed-result">
+Speed comparison will appear here.
+</div>
+<div id="v2StatComparisonContent">
+Import your save to view Pokémon stats.
+</div>
+</details>
+
+<section class="v2-results-panel">
+<h2>Matchup Damage Results</h2>
+<div id="saveBattleResults" class="results" aria-live="polite"></div>
+</section>
+
+</div>
+<div class="layout">
+<div class="v2-legacy-manual" aria-hidden="true">
+<section class="panel">
+<h2>Attacker · Trainer</h2>
+
+<div id="attackerDetails" class="muted"></div>
+<div id="attackerStats" class="pokemon-stats"></div>
+<label class="custom-toggle">
+<input type="checkbox" id="customAttacker">
+Customize attacker (override trainer build)
+</label>
+<div id="attackerCustomPanel" hidden><details class="v2-details"><summary>Custom Stats and Build</summary>
+<label for="attNature">Nature</label>
+<select id="attNature"></select>
+<label for="attAbility">Ability</label>
+<select id="attAbility"></select>
+<label for="attItem">Held Item</label>
+<select id="attItem"></select>
+<h3>Attacker IVs</h3>
+<div class="stat-grid" id="attIVGrid"></div>
+<h3>Attacker EVs</h3>
+<div class="stat-grid" id="attEVGrid"></div>
+<p class="muted" id="attEVTotal">Total EVs: 0 / 510</p>
+</details></div>
+<label for="move">Move</label>
+<select id="move"></select>
+<div id="moveDetails" class="muted"></div>
+<details class="v2-details"><summary>Special Move Settings</summary>
+<label for="unavailablePartySlots">Beat Up Unavailable Party Slots</label>
+<input id="unavailablePartySlots" type="text"
+placeholder="Example: 1,2">
+<p class="muted">Enter party slots that are fainted or have a major status condition. Leave blank if all are eligible.</p>
+<label for="stockpileCount">Spit Up Stockpile Count</label>
+<select id="stockpileCount">
+<option value="0">Not specified</option>
+<option value="1">1 Stockpile</option>
+<option value="2">2 Stockpiles</option>
+<option value="3">3 Stockpiles</option>
+</select>
+<label for="attackerCurrentHP">Attacker Current HP (blank = full)</label>
+<input id="attackerCurrentHP" type="number" min="1" placeholder="Full HP">
+<label for="receivedDamage">Previously Received Damage</label>
+<input id="receivedDamage" type="number" min="0" value="0">
+<p class="muted">Counter, Mirror Coat, Metal Burst, and Bide require qualifying battle events.</p>
+<label for="magnitude">Magnitude Level</label>
+<select id="magnitude">
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="6">6</option>
+<option value="7" selected>7</option>
+<option value="8">8</option>
+<option value="9">9</option>
+<option value="10">10</option>
+</select>
+<label for="remainingPP">Trump Card Remaining PP</label>
+<select id="remainingPP">
+<option value="5">5</option>
+<option value="4">4</option>
+<option value="3">3</option>
+<option value="2">2</option>
+<option value="1">1</option>
+</select>
+</details>
+</section>
+<section class="panel">
+<h2>Defender</h2>
+<label for="defenderSearch">Search Pokémon</label>
+<input id="defenderSearch" type="search" placeholder="Search Pokémon name or number">
+<label for="defender">Pokémon</label>
+<select id="defender"></select>
+<div id="defenderStats" class="pokemon-stats"></div>
+<label for="defenderStatus">Defender Status</label>
+<select id="defenderStatus">
+<option value="">Healthy</option>
+<option value="slp">Sleep</option>
+<option value="brn">Burn</option>
+<option value="par">Paralysis</option>
+<option value="psn">Poison</option>
+<option value="tox">Badly Poisoned</option>
+<option value="frz">Freeze</option>
+</select>
+<label for="currentHP">Current HP (leave blank for full HP)</label>
+<input id="currentHP" type="number" min="0" placeholder="Full HP">
+<label for="level">Level</label>
+<input id="level" type="number" min="1" max="100" value="50">
+<label for="nature">Nature</label>
+<select id="nature"></select>
+<label for="ability">Ability</label>
+<select id="ability"></select>
+<label for="item">Held Item</label>
+<select id="item"></select>
+<h3>Individual Values (IVs)</h3>
+<div class="stat-grid" id="ivGrid"></div>
+<h3>Effort Values (EVs)</h3>
+<div class="stat-grid" id="evGrid"></div>
+<p class="muted" id="evTotal">Total EVs: 0 / 510</p>
+</section>
+</div>
+
+<button id="calculate">Calculate Damage</button>
+<section id="results" class="results" aria-live="polite">
+Select a matchup to calculate damage.
+</section>
+</div>
+</main>
+<footer>Unova Archive · Damage Calculator V2</footer>
+<script src="./save-importer.js"></script>
+<script src="./dist/unova-api.js"></script>
+<script src="./calculator-ui.js"></script>
+</body>
+</html>
