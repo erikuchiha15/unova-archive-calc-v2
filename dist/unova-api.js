@@ -162194,7 +162194,9 @@
             minimum: range[0],
             maximum: range[1]
           },
-          description: result.fullDesc()
+          description: range[1] === 0
+              ? "0 damage — immune or no damage possible"
+              : result.fullDesc()
         };
       }
       module.exports = {
