@@ -161384,6 +161384,20 @@
       var personal = load("pokemon_personal_data.json");
       var abilityNames = load("pokemon_abilities.json");
       var STATS = ["hp", "atk", "def", "spa", "spd", "spe"];
+      function calculateTrainerEVs(level, record) {
+        const budget = level <= 15 ? 64 : level <= 25 ? 128 : level <= 35 ? 192 : level <= 45 ? 256 : level <= 55 ? 384 : 508;
+        const offensiveStat = record.attack >= record.sp_attack ? "atk" : "spa";
+        const supportStat = record.speed >= 60 ? "spe" : "hp";
+        const primary = Math.min(Math.floor(budget / 2), 252);
+        const secondary = Math.min(budget - primary, 252);
+        const evs = Object.fromEntries(STATS.map((stat) => [stat, 0]));
+        evs[offensiveStat] = primary;
+        evs[supportStat] = secondary;
+        if (budget === 508) {
+          evs[supportStat === "hp" ? "def" : "hp"] = 4;
+        }
+        return evs;
+      }
       function difficultyToIV(difficulty) {
         const value = Number(difficulty);
         if (!Number.isInteger(value) || value < 0 || value > 255) {
@@ -161451,7 +161465,7 @@
           personalRecordId: data.personalRecordId,
           level: data.level,
           ivs: data.ivs,
-          evs: Object.fromEntries(STATS.map((stat) => [stat, 0])),
+          evs: calculateTrainerEVs(data.level, personal[data.personalRecordId]),
           nature: options.nature ?? data.nature,
           ...data.abilityResolved ? { ability: data.ability } : {},
           ...data.heldItem ? { item: data.heldItem } : {}
