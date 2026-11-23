@@ -94,7 +94,7 @@
       heldItemId: read16(a, 2),
       trainerId: read32(a, 4),
       abilityId: a[13],
-      natureId: personality % 25,
+      natureId: b[25],
       evs: {
         hp:a[16], atk:a[17], def:a[18],
         spe:a[19], spa:a[20], spd:a[21]
