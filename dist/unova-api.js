@@ -162440,10 +162440,17 @@
         }
         const playerSide = validateSide(conditions.player || {});
         const trainerSide = validateSide(conditions.trainer || {});
-        if (playerSide.burned === true)
-          player.status = "brn";
-        if (trainerSide.burned === true)
-          trainer.status = "brn";
+        const validStatuses = ["", "brn", "par", "psn", "tox"];
+        function resolveStatus(side) {
+          const status = side.status === void 0 ? side.burned === true ? "brn" : "" : side.status;
+          if (!validStatuses.includes(status))
+            throw Error("Invalid Pok\xE9mon status: " + status);
+          return status;
+        }
+        const playerStatus = resolveStatus(playerSide);
+        const trainerStatus = resolveStatus(trainerSide);
+        player.status = playerStatus;
+        trainer.status = trainerStatus;
         function makeSide(value) {
           return new Side({
             isReflect: value.reflect === true,
@@ -162504,7 +162511,7 @@
             moveOptions,
             attackerOptions: {
               boosts: trainerStages,
-              status: trainerSide.burned === true ? "brn" : ""
+              status: trainerStatus
             },
             defenderCurrentHP: specialOptions.defenderCurrentHP,
             specialOptions

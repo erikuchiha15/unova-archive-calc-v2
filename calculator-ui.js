@@ -632,6 +632,67 @@ async function calculateSaveMatchup() {
 }
 
 
+
+function v2StatusResidual(maxHP, status, counter = 1) {
+  const hp = Number(maxHP);
+  const n = Number(counter);
+
+  if (!Number.isInteger(hp) || hp < 1)
+    return null;
+
+  if (status === "psn")
+    return Math.max(1, Math.floor(hp / 8));
+
+  if (status === "tox") {
+    if (!Number.isInteger(n) || n < 1 || n > 15)
+      return null;
+
+    return Math.max(1, Math.floor(hp * n / 16));
+  }
+
+  return 0;
+}
+
+function v2UpdateToxicControls() {
+  for (const prefix of ["player", "trainer"]) {
+    const status = $(prefix + "Status").value;
+    $(prefix + "ToxicControls").hidden = status !== "tox";
+  }
+}
+
+function v2RenderStatusResidual(playerHP, trainerHP) {
+  const statuses = [
+    ["Your Pokémon", "player", playerHP],
+    ["Trainer Pokémon", "trainer", trainerHP]
+  ];
+
+  const lines = [];
+
+  for (const [name, prefix, hp] of statuses) {
+    const status = $(prefix + "Status").value;
+    const counter = Number($(prefix + "ToxicCounter").value);
+    const damage = v2StatusResidual(hp, status, counter);
+
+    if (damage === null)
+      continue;
+
+    if (status === "psn") {
+      lines.push(
+        name + ": Poison deals " + damage +
+        " HP at the end of the turn."
+      );
+    } else if (status === "tox") {
+      lines.push(
+        name + ": Toxic deals " + damage +
+        " HP at counter " + counter +
+        " (next counter: " + Math.min(15, counter + 1) + ")."
+      );
+    }
+  }
+
+  return lines;
+}
+
 // V2 automatic team matchup calculations
 let v2MatchupVersion = 0;
 let v2MatchupTimer = null;
@@ -725,14 +786,14 @@ async function calculateV2Matchup(version = ++v2MatchupVersion) {
               lightScreen:$("playerLightScreen").checked,
               helpingHand:$("playerHelpingHand").checked,
               friendGuard:$("playerFriendGuard").checked,
-              burned:$("playerBurned").checked
+              status:$("playerStatus").value
             },
             trainer:{
               reflect:$("trainerReflect").checked,
               lightScreen:$("trainerLightScreen").checked,
               helpingHand:$("trainerHelpingHand").checked,
               friendGuard:$("trainerFriendGuard").checked,
-              burned:$("trainerBurned").checked
+              status:$("trainerStatus").value
             }
           },
           battleStages:{
@@ -852,6 +913,34 @@ async function calculateV2Matchup(version = ++v2MatchupVersion) {
   const successful = results.find(
     result => result.status === "fulfilled"
   );
+
+  const playerHP = v2ImportedStats[
+    String(pokemon.slot)
+  ]?.stats?.hp;
+
+  const trainerHP = trainerPokemon.stats?.hp;
+
+  const residualLines = v2RenderStatusResidual(
+    playerHP,
+    trainerHP
+  );
+
+  if (residualLines.length) {
+    const residual = document.createElement("div");
+    residual.className = "v2-hazard-summary";
+
+    const heading = document.createElement("strong");
+    heading.textContent = "End-of-turn Status Damage";
+    residual.append(heading);
+
+    for (const line of residualLines) {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = line;
+      residual.append(paragraph);
+    }
+
+    wrapper.append(residual);
+  }
 
   if (successful?.value?.normal?.entryHazards) {
     const hazards = successful.value.normal.entryHazards;
@@ -1203,9 +1292,8 @@ function renderV2MoveOrder() {
       ability:playerInfo.ability,
       item:playerInfo.item,
       weather:$("weather").value,
-      paralyzed:$("v2PlayerParalyzed").checked,
-      statused:$("v2PlayerParalyzed").checked ||
-        $("playerBurned").checked,
+      paralyzed:$("playerStatus").value === "par",
+      statused:$("playerStatus").value !== "",
       tailwind:$("v2PlayerTailwind").checked,
       unburden:$("v2PlayerUnburden").checked
     }
@@ -1218,9 +1306,8 @@ function renderV2MoveOrder() {
       ability:trainer.ability,
       item:trainer.item,
       weather:$("weather").value,
-      paralyzed:$("v2TrainerParalyzed").checked,
-      statused:$("v2TrainerParalyzed").checked ||
-        $("trainerBurned").checked,
+      paralyzed:$("trainerStatus").value === "par",
+      statused:$("trainerStatus").value !== "",
       tailwind:$("v2TrainerTailwind").checked,
       unburden:$("v2TrainerUnburden").checked
     }
@@ -1346,9 +1433,8 @@ function renderV2SpeedComparison() {
       ability:playerInfo.ability,
       item:playerInfo.item,
       weather:$("weather").value,
-      paralyzed:$("v2PlayerParalyzed").checked,
-      statused:$("v2PlayerParalyzed").checked ||
-        $("playerBurned").checked,
+      paralyzed:$("playerStatus").value === "par",
+      statused:$("playerStatus").value !== "",
       tailwind:$("v2PlayerTailwind").checked,
       unburden:$("v2PlayerUnburden").checked
     }
@@ -1361,9 +1447,8 @@ function renderV2SpeedComparison() {
       ability:trainer.ability,
       item:trainer.item,
       weather:$("weather").value,
-      paralyzed:$("v2TrainerParalyzed").checked,
-      statused:$("v2TrainerParalyzed").checked ||
-        $("trainerBurned").checked,
+      paralyzed:$("trainerStatus").value === "par",
+      statused:$("trainerStatus").value !== "",
       tailwind:$("v2TrainerTailwind").checked,
       unburden:$("v2TrainerUnburden").checked
     }
@@ -1526,13 +1611,9 @@ async function init() {
     // Attach Speed listeners after stat-stage controls exist.
     for (const id of [
       "v2TrickRoom",
-      "v2PlayerParalyzed",
-      "v2TrainerParalyzed",
       "defBoost_spe",
       "atkBoost_spe",
       "weather",
-      "playerBurned",
-      "trainerBurned",
       "v2PlayerTailwind",
       "v2TrainerTailwind",
       "v2PlayerUnburden",
@@ -1647,7 +1728,6 @@ async function init() {
       "playerHelpingHand","playerFriendGuard",
       "trainerReflect","trainerLightScreen",
       "trainerHelpingHand","trainerFriendGuard",
-      "playerBurned","trainerBurned",
       "playerStealthRock","playerSpikes",
       "trainerStealthRock","trainerSpikes"
     ]) {
@@ -1660,6 +1740,22 @@ async function init() {
     $("attacker").addEventListener(
       "change",refreshV2TeamSlots
     );
+
+    for (const prefix of ["player", "trainer"]) {
+      const status = $(prefix + "Status");
+      const counter = $(prefix + "ToxicCounter");
+
+      status.addEventListener("change", () => {
+        v2UpdateToxicControls();
+        renderV2SpeedComparison();
+        renderV2MoveOrder();
+        scheduleV2Matchup();
+      });
+
+      counter.addEventListener("change", scheduleV2Matchup);
+    }
+
+    v2UpdateToxicControls();
 
     await loadTrainer();
     updateSaveTrainerMoves();

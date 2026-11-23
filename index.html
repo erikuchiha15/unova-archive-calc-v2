@@ -1305,14 +1305,82 @@ main > .layout {
 <label><input type="checkbox" id="playerLightScreen"> Light Screen</label>
 <label><input type="checkbox" id="playerHelpingHand"> Helping Hand</label>
 <label><input type="checkbox" id="playerFriendGuard"> Friend Guard</label>
-<label><input type="checkbox" id="playerBurned"> Burned</label></section>
+
+<label for="playerStatus">Pokémon Status</label>
+<select id="playerStatus">
+<option value="">Healthy</option>
+<option value="brn">Burned</option>
+<option value="par">Paralyzed</option>
+<option value="psn">Poisoned</option>
+<option value="tox">Badly Poisoned (Toxic)</option>
+</select>
+<div id="playerToxicControls" hidden>
+<label for="playerToxicCounter">
+Your Pokémon — Toxic Damage Counter
+</label>
+<select id="playerToxicCounter">
+<option value="1">1/16 HP</option>
+<option value="2">2/16 HP</option>
+<option value="3">3/16 HP</option>
+<option value="4">4/16 HP</option>
+<option value="5">5/16 HP</option>
+<option value="6">6/16 HP</option>
+<option value="7">7/16 HP</option>
+<option value="8">8/16 HP</option>
+<option value="9">9/16 HP</option>
+<option value="10">10/16 HP</option>
+<option value="11">11/16 HP</option>
+<option value="12">12/16 HP</option>
+<option value="13">13/16 HP</option>
+<option value="14">14/16 HP</option>
+<option value="15">15/16 HP</option>
+</select>
+<p class="muted">
+Select the multiplier for the upcoming Toxic damage tick.
+</p>
+</div>
+</section>
 <section class="v2-team-conditions">
 <h3>Trainer Pokémon</h3>
 <label><input type="checkbox" id="trainerReflect"> Reflect</label>
 <label><input type="checkbox" id="trainerLightScreen"> Light Screen</label>
 <label><input type="checkbox" id="trainerHelpingHand"> Helping Hand</label>
 <label><input type="checkbox" id="trainerFriendGuard"> Friend Guard</label>
-<label><input type="checkbox" id="trainerBurned"> Burned</label></section>
+
+<label for="trainerStatus">Pokémon Status</label>
+<select id="trainerStatus">
+<option value="">Healthy</option>
+<option value="brn">Burned</option>
+<option value="par">Paralyzed</option>
+<option value="psn">Poisoned</option>
+<option value="tox">Badly Poisoned (Toxic)</option>
+</select>
+<div id="trainerToxicControls" hidden>
+<label for="trainerToxicCounter">
+Trainer Pokémon — Toxic Damage Counter
+</label>
+<select id="trainerToxicCounter">
+<option value="1">1/16 HP</option>
+<option value="2">2/16 HP</option>
+<option value="3">3/16 HP</option>
+<option value="4">4/16 HP</option>
+<option value="5">5/16 HP</option>
+<option value="6">6/16 HP</option>
+<option value="7">7/16 HP</option>
+<option value="8">8/16 HP</option>
+<option value="9">9/16 HP</option>
+<option value="10">10/16 HP</option>
+<option value="11">11/16 HP</option>
+<option value="12">12/16 HP</option>
+<option value="13">13/16 HP</option>
+<option value="14">14/16 HP</option>
+<option value="15">15/16 HP</option>
+</select>
+<p class="muted">
+Select the multiplier for the upcoming Toxic damage tick.
+</p>
+</div>
+</section>
 </div>
 
 
@@ -1382,8 +1450,8 @@ These new controls are not connected yet.
 <summary>Pokémon Stats · IVs · EVs</summary>
 <div class="v2-speed-controls">
 <label><input type="checkbox" id="v2TrickRoom"> Trick Room</label>
-<label><input type="checkbox" id="v2PlayerParalyzed"> Your Pokémon Paralyzed</label>
-<label><input type="checkbox" id="v2TrainerParalyzed"> Trainer Pokémon Paralyzed</label>
+
+
 </div>
 
 <details class="v2-advanced-speed">
